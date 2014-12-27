@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Script to gather some useful system info and slap it on the
+# desktop as a background image.
+#
+# Requires ImageMagick installed with GhostScript to run.
+# If you have HomeBrew installed you can simply
+#   $ brew install imagemagick ghostscript
+
+# -- Returns specified field value from system_profiler
+#  - Arg1: system_profiler data type string (i.e. SPSoftwareDataType)
+#  - Arg2: Field name of value to be returned
+function get_system_profile
+{
+  system_profiler $1 |
+  grep "$2" |
+  awk -F': ' '{ print $2 }'
+}
+
+# -- Grab data needed for the desktop background
+display_resolution=$(
+  get_system_profile SPDisplaysDataType 'Resolution' |
+  tr -d ' '
+)
+
+os_version=$(get_system_profile SPSoftwareDataType 'System Version')
+
+model_id=$(get_system_profile SPHardwareDataType 'Model Identifier')
+
+serial_number=$(get_system_profile SPHardwareDataType 'Serial Number')
+
+ip_address=$(get_system_profile SPNetworkDataType 'IPv4 Addresses')
+
+xcode_version=$(
+  system_profiler SPInstallHistoryDataType |
+  grep -A 2 'Xcode' |
+  tr -s ' ' |
+  tr -d '\n:'
+)
+
+# -- Formats each piece of data on its very own new line
+function background_text
+{
+  printf %"s\n" "$os_version" "$model_id" "$serial_number" \
+  "$ip_address" "----" "$xcode_version"
+}
+
+# -- Read more about this usage of ImageMagick at http://www.imagemagick.org/Usage/text/
+function generate_image
+{
+  convert -verbose -background lightblue -fill black -interline-spacing 15 \
+  -size $display_resolution -pointsize 32 caption:"\n\n$(background_text)" \
+  image.gif
+}
+
+# -- Uses a snippet of AppleScript to set the desktop background
+#    and restarts the Dock to refresh the desktop
+function set_desktop_background
+{
+  path_to_image="$PWD/image.gif"
+  osascript -e "tell application \"System Events\" to set picture of every desktop to \"$path_to_image\""
+  killall Dock
+}
+
+generate_image
+set_desktop_background
