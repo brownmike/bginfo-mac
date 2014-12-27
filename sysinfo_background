@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to gather some useful system info and slap it on the
-# desktop as a background image.
+# desktop as a background image in Mac OS X.
 #
 # Requires ImageMagick installed with GhostScript to run.
 # If you have HomeBrew installed you can simply
