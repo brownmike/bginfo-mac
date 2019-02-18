@@ -14,7 +14,8 @@ function get_system_profile
 {
   system_profiler $1 |
   grep "$2" |
-  awk -F': ' '{ print $2 }'
+  awk -F': ' '{ print $2 }' |
+  sed 's/Retina//'
 }
 
 # -- Grab data needed for the desktop background
